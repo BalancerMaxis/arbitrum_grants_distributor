@@ -138,7 +138,7 @@ def get_bal_token_price() -> float:
 
 
 def recur_distribute_unspend_tokens(
-    max_tokens_per_pool: Dict, tokens_gauge_distributions: Dict
+        max_tokens_per_pool: Dict, tokens_gauge_distributions: Dict
 ) -> None:
     """
     Recursively distribute unspent tokens to uncapped gauges proportionally to their voting weight until
@@ -154,10 +154,10 @@ def recur_distribute_unspend_tokens(
             [
                 g["voteWeight"]
                 for g in [
-                    gauge
-                    for addr, gauge in tokens_gauge_distributions.items()
-                    if gauge["distribution"] < max_tokens_per_pool[addr]
-                ]
+                gauge
+                for addr, gauge in tokens_gauge_distributions.items()
+                if gauge["distribution"] < max_tokens_per_pool[addr]
+            ]
             ]
         )
         # if total uncapped weight is 0, then we can not continue
@@ -185,19 +185,19 @@ def recur_distribute_unspend_tokens(
             )
             uncap_gauge["distribution"] = distribution
             uncap_gauge["pctDistribution"] = (
-                uncap_gauge["distribution"] / TOTAL_TOKENS_PER_EPOCH * 100
+                    uncap_gauge["distribution"] / TOTAL_TOKENS_PER_EPOCH * 100
             )
     # Call recursively if there is still unspent tokens
     if (
-        TOTAL_TOKENS_PER_EPOCH
-        - sum([g["distribution"] for g in tokens_gauge_distributions.values()])
-        > 0
+            TOTAL_TOKENS_PER_EPOCH
+            - sum([g["distribution"] for g in tokens_gauge_distributions.values()])
+            > 0
     ):
         recur_distribute_unspend_tokens(max_tokens_per_pool, tokens_gauge_distributions)
 
 
 def generate_and_save_transaction(
-    tokens_gauge_distributions: Dict, start_date: datetime, end_date: datetime
+        tokens_gauge_distributions: Dict, start_date: datetime, end_date: datetime
 ) -> Dict:
     """
     Take tx template and inject data into it
@@ -228,8 +228,8 @@ def generate_and_save_transaction(
 
     # Dump back to tokens_distribution_for_msig.json
     with open(
-        f"{get_root_dir()}/output/{FILE_PREFIX}_{start_date.date()}_{end_date.date()}.json",
-        "w",
+            f"{get_root_dir()}/output/{FILE_PREFIX}_{start_date.date()}_{end_date.date()}.json",
+            "w",
     ) as _f:
         json.dump(output_data, _f, indent=4)
     return output_data
@@ -262,9 +262,9 @@ def run_stip_pipeline(end_date: int) -> None:
     for pool in all_pools:
         # Only collect gauges for the whitelisted pools on the proper chain that are not killed
         if (
-            pool["chain"].lower() == addressbook.chain
-            and pool["gauge"]["isKilled"] is False
-            and pool["id"].lower() in whitelist
+                pool["chain"].lower() == addressbook.chain
+                and pool["gauge"]["isKilled"] is False
+                and pool["id"].lower() in whitelist
         ):
             _gauge_addr = to_checksum_address(pool["gauge"]["address"])
             gauges[_gauge_addr] = {
@@ -281,7 +281,7 @@ def run_stip_pipeline(end_date: int) -> None:
     for gauge_addr, gauge_data in gauges.items():
         for pool_snapshot in pool_snapshots:
             if Web3.to_checksum_address(
-                pool_snapshot["pool"]["address"]
+                    pool_snapshot["pool"]["address"]
             ) == Web3.to_checksum_address(gauge_data["pool"]):
                 # Since snapshots are sorted by timestamp descending,
                 # we can just take the first one we find for each pool and break
@@ -306,28 +306,32 @@ def run_stip_pipeline(end_date: int) -> None:
     bal_token_price = get_bal_token_price()
     for gauge_addr, gauge_data in gauges.items():
         weight = (
-            gauge_c_contract.functions.gauge_relative_weight(
-                Web3.to_checksum_address(gauge_addr)
-            ).call(block_identifier=target_block)
-            / 1e18
-            * 100
+                gauge_c_contract.functions.gauge_relative_weight(
+                    Web3.to_checksum_address(gauge_addr)
+                ).call(block_identifier=target_block)
+                / 1e18
+                * 100
         )
         gauges[gauge_addr]["weightNoBoost"] = weight
         # Calculate dynamic boost. Formula is `[Fees earned*multipler/value of bal emitted per pool]`
         # Value of bal earned must always be >1 to allow for the desired effect from division.
         dollar_value_of_bal_emitted = (
-            (weight / 100) * emissions_per_week * bal_token_price
+                (weight / 100) * emissions_per_week * bal_token_price
         )
         if (
-            dollar_value_of_bal_emitted >= MIN_BAL_IN_USD_FOR_BOOST
-            and dollar_value_of_bal_emitted > 1
+                dollar_value_of_bal_emitted >= MIN_BAL_IN_USD_FOR_BOOST
+                and dollar_value_of_bal_emitted > 1
         ):
             dynamic_boost = min(
                 pool_protocol_fees.get(gauge_addr, 0) / dollar_value_of_bal_emitted,
                 DYNAMIC_BOOST_CAP,
             )
+            print(
+                f"Gauge {gauge_addr} has a fees of {pool_protocol_fees.get(gauge_addr, 0)} and earned {dollar_value_of_bal_emitted} in USD BAL rendering a raw dynamic boost of {dynamic_boost}")
         else:
-            dynamic_boost = 0
+            dynamic_boost = 1.0
+        if dynamic_boost < 1:
+            dynamic_boost = 1.0
         dynamic_boosts[gauge_addr] = dynamic_boost
 
         # Now calculate the final boost value, which uses formula - (dynamic boost + fixed boost) - 1
@@ -354,7 +358,7 @@ def run_stip_pipeline(end_date: int) -> None:
             gauges[gauge_addr]["id"].lower(), default_vote_cap
         )
         max_tokens_per_gauge[gauge_addr] = (
-            percent_vote_caps_per_gauge[gauge_addr] / 100 * TOTAL_TOKENS_PER_EPOCH
+                percent_vote_caps_per_gauge[gauge_addr] / 100 * TOTAL_TOKENS_PER_EPOCH
         )
     # Calculate total weight
     total_weight = sum([gauge["voteWeight"] for gauge in gauges.values()])
@@ -363,7 +367,7 @@ def run_stip_pipeline(end_date: int) -> None:
         gauge_addr = Web3.to_checksum_address(gauge_addr)
         # Calculate distribution based on vote weight and total weight
         to_distribute = (
-            TOKENS_TO_FOLLOW_VOTING * gauge_data["voteWeight"] / total_weight
+                TOKENS_TO_FOLLOW_VOTING * gauge_data["voteWeight"] / total_weight
         )
         # Add in fixed incentives
         to_distribute += fixed_emissions_per_pool.get(gauge_data["id"], 0)
