@@ -89,13 +89,13 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     {
         "pool_id": "0x90e6cb5249f5e1572afbf8a96d8a1ca6acffd73900000000000000000000055c",
         "meta": {"symbol": "rsETH-wETH"},
-        "fixedEmissions": 1000,
+        "fixedEmissions": 2000,
     },
     {
         "pool_id": "0xcdcef9765d369954a4a936064535710f7235110a000200000000000000000558",
         "meta": {"symbol": "weETH-wstETH ECLP"},
         "fixedBoost": 1.5,
-        "fixedEmissions": 1000,
+        "fixedEmissions": 2000,
     },
 ]
 
