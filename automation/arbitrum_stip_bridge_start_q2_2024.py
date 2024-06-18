@@ -97,10 +97,7 @@ ACTIVE_POOLS_AND_OVERRIDES = [
         "fixedBoost": 1.5,
         "fixedEmissions": 1000,
     },
-
 ]
-
-
 
 
 # assert that the total sum of all fixedEmissions is equal to FIXED_INCENTIVE_TOKENS_PER_EPOCH
