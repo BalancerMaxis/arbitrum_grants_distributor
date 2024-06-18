@@ -35,10 +35,12 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     {
         "pool_id": "0x125bc5a031b2db6733bfa35d914ffa428095978b000200000000000000000514",
         "meta": {"symbol": "ECLP-AUSDC-AUSDT"},
+        "fixedBoost": 1.75,
     },
     {
         "pool_id": "0x260dbd54d87a10a0fc9d08622ebc969a3bf4e6bb000200000000000000000536",
         "meta": {"symbol": "jitoSOL/wstETH"},
+        "fixedBoost": 1.5,
     },
     {
         "pool_id": "0x2ce4457acac29da4736ae6f5cd9f583a6b335c270000000000000000000004dc",
@@ -84,6 +86,18 @@ ACTIVE_POOLS_AND_OVERRIDES = [
         "pool_id": "0x9f8ed1acfe0c863381b9081aff2144fc867aa7730002000000000000000004d4",
         "meta": {"symbol": "ANKR:ankrETH"},
     },
+    {
+        "pool_id": "0x90e6cb5249f5e1572afbf8a96d8a1ca6acffd73900000000000000000000055c",
+        "meta": {"symbol": "rsETH-wETH"},
+        "fixedEmissions": 1000,
+    },
+    {
+        "pool_id": "0xcdcef9765d369954a4a936064535710f7235110a000200000000000000000558",
+        "meta": {"symbol": "weETH-wstETH ECLP"},
+        "fixedBoost": 1.5,
+        "fixedEmissions": 1000,
+    },
+
 ]
 
 
