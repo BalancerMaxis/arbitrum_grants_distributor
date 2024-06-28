@@ -363,7 +363,6 @@ def run_stip_pipeline(end_date: int) -> None:
             "poolAddress": gauge_data["poolAddress"],
             "symbol": gauge_data["symbol"],
             "distribution": to_distribute,
-            "weekly_distro": to_distribute / 2,
             "pctDistribution": to_distribute / TOTAL_TOKENS_PER_EPOCH * 100,
             "pctToAura": pct_to_aura,
             "distroToAura": to_distribute * pct_to_aura,
