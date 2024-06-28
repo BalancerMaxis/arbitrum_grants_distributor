@@ -65,6 +65,11 @@ ACTIVE_POOLS_AND_OVERRIDES = [
         "fixedEmissions": 1000,
     },
     {
+        "pool_id": "0x7b54c44fbe6db6d97fd22b8756f89c0af16202cc00000000000000000000053c",
+        "meta": {"symbol": "ETHx-wstETH-ETH"},
+        "fixedBoost": 1.5,
+    }
+    {
         "pool_id": "0x7272163a931dac5bbe1cb5fefaf959bb65f7346f000200000000000000000549",
         "meta": {"symbol": "GYD-AUSDT-ECLP"},
         "fixedBoost": 1.75,

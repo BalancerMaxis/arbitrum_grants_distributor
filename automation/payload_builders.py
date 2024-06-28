@@ -89,9 +89,8 @@ def generate_and_save_bal_injector_transaction(
 
     # Find transaction with func name `setRecipientList` and dump gauge
     gauge_distributions = tokens_gauge_distributions.values()
-    claim_tx = output_data["transactions"][0]
-    tx_template = output_data["transactions"][1]
-    transfer_tx = output_data["transactions"][2]
+    tx_template = output_data["transactions"][0]
+    transfer_tx = output_data["transactions"][1]
     tx_list = []
     gauges_list = []
     amounts_list = []
@@ -114,9 +113,10 @@ def generate_and_save_bal_injector_transaction(
     tx["contractInputsValues"]["maxPeriods"] = f"[{','.join(max_periods_list)}]"
     tx_list.append(tx)
 
-    transfer_tx["contractInputsValues"]["amount"] = str(int(total_amount))
+    # Note we started on an off-week of biweekly claiming so can only transfer 1 week at a time.
+    # Another transaction flow is setup to claim/pay in the other half when funds are available.
+    transfer_tx["contractInputsValues"]["amount"] = str(int(total_amount) / num_periods)
     tx_list.append(transfer_tx)
-    tx_list.insert(0, claim_tx)
     output_data["transactions"] = tx_list
     with open(
         f"{get_root_dir()}/output/{FILE_PREFIX}_{start_date.date()}_{end_date.date()}_bal_injector_stream.json",
