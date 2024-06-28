@@ -10,7 +10,7 @@ CURRENT_YEAR = 2024
 FIXED_INCENTIVE_TOKENS_PER_EPOCH = 20_000  ## Max 10k per 2 weeks or 20k per epoch
 # Total number of tokens available per 2 week epoch
 ## TODO remove -12_000 this is order to manually handle fixed incentives on gauges not yet added to voting as part of getting STIP running.
-TOTAL_TOKENS_PER_EPOCH = (600_000 / (12 / 2)) - 12_000    # 100k per epoch, 50k per week
+TOTAL_TOKENS_PER_EPOCH = (600_000 / (12 / 2)) - 12_000  # 100k per epoch, 50k per week
 DYNAMIC_BOOST_CAP = 3
 MIN_BAL_IN_USD_FOR_BOOST = 200
 TOKENS_TO_FOLLOW_VOTING = TOTAL_TOKENS_PER_EPOCH - FIXED_INCENTIVE_TOKENS_PER_EPOCH
