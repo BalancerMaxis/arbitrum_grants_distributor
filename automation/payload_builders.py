@@ -115,7 +115,12 @@ def generate_and_save_bal_injector_transaction(
 
     # Note we started on an off-week of biweekly claiming so can only transfer 1 week at a time.
     # Another transaction flow is setup to claim/pay in the other half when funds are available.
-    transfer_tx["contractInputsValues"]["amount"] = str(int(total_amount) / num_periods)
+    transfer_tx["contractInputsValues"]["amount"] = str(
+        (Decimal(total_amount) / Decimal(num_periods)).to_integral_value(
+            rounding=ROUND_DOWN
+        )
+    )
+
     tx_list.append(transfer_tx)
     output_data["transactions"] = tx_list
     with open(
