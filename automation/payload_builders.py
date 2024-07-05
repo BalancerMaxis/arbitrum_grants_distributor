@@ -89,9 +89,8 @@ def generate_and_save_bal_injector_transaction(
 
     # Find transaction with func name `setRecipientList` and dump gauge
     gauge_distributions = tokens_gauge_distributions.values()
-    claim_tx = output_data["transactions"][0]
-    tx_template = output_data["transactions"][1]
-    transfer_tx = output_data["transactions"][2]
+    tx_template = output_data["transactions"][0]
+    transfer_tx = output_data["transactions"][1]
     tx_list = []
     gauges_list = []
     amounts_list = []
@@ -120,6 +119,7 @@ def generate_and_save_bal_injector_transaction(
     # Claims happen on off weeks when the other 50k is sent in due to epoch timing.  This is autoscheduled in den.
     # When we run we will always have 50k waiting from the claim the week before.
     #    tx_list.insert(0, claim_tx)
+
     output_data["transactions"] = tx_list
     with open(
         f"{get_root_dir()}/output/{FILE_PREFIX}_{start_date.date()}_{end_date.date()}_bal_injector_stream.json",
