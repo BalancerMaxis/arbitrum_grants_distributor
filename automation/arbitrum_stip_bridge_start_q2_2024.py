@@ -37,7 +37,7 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     ## {
     {
         "pool_id": "0xe8a6026365254f779b6927f00f8724ea1b8ae5e0000000000000000000000580",
-        "meta": {"symbol": "gDAI-USDC"},
+        "meta": {"symbol": "gUSDC-USDC"},
         "fixedBoost": 1.75,
         "fixedEmissions": 2000,
     },
