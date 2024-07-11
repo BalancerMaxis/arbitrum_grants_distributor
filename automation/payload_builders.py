@@ -112,21 +112,21 @@ def generate_and_save_bal_injector_transaction(
     tx["contractInputsValues"]["amountsPerPeriod"] = f"[{','.join(amounts_list)}]"
     tx["contractInputsValues"]["maxPeriods"] = f"[{','.join(max_periods_list)}]"
     tx_list.append(tx)
-
-    # Note we started on an off-week of biweekly claiming so can only transfer 1 week at a time.
-    # Another transaction flow is setup to claim/pay in the other half when funds are available.
-    transfer_tx["contractInputsValues"]["amount"] = str(
-        (Decimal(total_amount) / Decimal(num_periods)).to_integral_value(
-            rounding=ROUND_DOWN
-        )
-    )
-
+    # Due to split nature of things, we will just send 50,000 $ARB each week for this program to the injector.
+    # transfer_tx["contractInputsValues"]["amount"] = str(int(total_amount))
+    transfer_tx["contractInputsValues"]["amount"] = str(int(50000e18))
     tx_list.append(transfer_tx)
+    # Claims happen on off weeks when the other 50k is sent in due to epoch timing.  This is autoscheduled in den.
+    # When we run we will always have 50k waiting from the claim the week before.
+    #    tx_list.insert(0, claim_tx)
+
     output_data["transactions"] = tx_list
     with open(
         f"{get_root_dir()}/output/{FILE_PREFIX}_{start_date.date()}_{end_date.date()}_bal_injector_stream.json",
         "w",
     ) as _f:
         json.dump(output_data, _f, indent=2)
-    print(f"{total_amount} $ARB transferred for balancer injector")
+    print(
+        f'{transfer_tx["contractInputsValues"]["amount"] } $ARB transferred for balancer injector'
+    )
     return output_data
