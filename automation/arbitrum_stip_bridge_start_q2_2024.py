@@ -36,6 +36,12 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     ## },
     ## {
     {
+        "pool_id": "0xe8a6026365254f779b6927f00f8724ea1b8ae5e0000000000000000000000580",
+        "meta": {"symbol": "gUSDC-USDC"},
+        "fixedBoost": 1.75,
+        "fixedEmissions": 2000,
+    },
+    {
         "pool_id": "0x90e6cb5249f5e1572afbf8a96d8a1ca6acffd73900000000000000000000055c",
         "meta": {"symbol": "rsETH-wETH"},
         "fixedEmissions": 4000,
@@ -44,25 +50,22 @@ ACTIVE_POOLS_AND_OVERRIDES = [
         "pool_id": "0xcdcef9765d369954a4a936064535710f7235110a000200000000000000000558",
         "meta": {"symbol": "weETH-wstETH ECLP"},
         "fixedBoost": 1.5,
-        "fixedEmissions": 4000,
     },
     {
         "pool_id": "0x7967fa58b9501600d96bd843173b9334983ee6e600020000000000000000056e",
         "meta": {"symbol": "wstETH-wETH-ECLP"},
         "fixedBoost": 2,
-        "fixedEmissions": 10000,
+        "fixedEmissions": 6000,
     },
     {
         "pool_id": "0x5b89dc91e5a4dc6d4ab0d970af6a7f981971a443000000000000000000000572",
         "meta": {"symbol": "instETH-wstETH"},
         "fixedBoost": 1.5,
-        "fixedEmissions": 1000,
     },
     {
         "pool_id": "0xb8cb384e65096386c1edaaf784e842c957fa3645000000000000000000000571",
         "meta": {"symbol": "inETH-wstETH"},
         "fixedBoost": 1.5,
-        "fixedEmissions": 1000,
     },
     {
         "pool_id": "0x7b54c44fbe6db6d97fd22b8756f89c0af16202cc00000000000000000000053c",
@@ -77,11 +80,6 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     {
         "pool_id": "0x6e822c64c00393b2078f2a5bb75c575ab505b55c000200000000000000000548",
         "meta": {"symbol": "GYD-AUSDC-ECLP"},
-        "fixedBoost": 1.75,
-    },
-    {
-        "pool_id": "0x46472cba35e6800012aa9fcc7939ff07478c473e00020000000000000000056c",
-        "meta": {"symbol": "GHO-AUSDC-ECLP"},
         "fixedBoost": 1.75,
     },
     {
