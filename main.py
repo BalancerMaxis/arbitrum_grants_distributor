@@ -3,7 +3,7 @@ import argparse
 
 # TS_NOW = 1702512000
 # TS_NOW = 1703721600 # 28-12-2023
-TS_NOW = 1714600800  # 11-01-2024
+TS_NOW = 1718143200  # 2024-06-13
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "chainId": "42161",
+  "createdAt": 1718736336954,
+  "meta": {
+    "name": "Transactions Batch",
+    "description": "",
+    "txBuilderVersion": "1.16.5",
+    "createdFromSafeAddress": "0xb6BfF54589f269E248f99D5956f1fDD5b014D50e",
+    "createdFromOwnerAddress": "",
+    "checksum": ""
+  },
+  "transactions": [
+    {
+      "to": "0x912CE59144191C1204E64559FE8253a0e49E6548",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "spender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "name": "approve",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "spender": "0xcA85e2cE206b48ee28A87b0a06f9519ABE627451",
+        "amount": ""
+      }
+    },
+    {
+      "to": "0xcA85e2cE206b48ee28A87b0a06f9519ABE627451",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "_pid",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "_token",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "_periods",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "name": "fundPool",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "_pid": "Aura Pool ID (int)",
+        "_token": "0x912CE59144191C1204E64559FE8253a0e49E6548",
+        "_amount": "Total amount across all periods",
+        "_periods": "2"
+      }
+    }
+  ]
+}

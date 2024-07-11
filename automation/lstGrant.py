@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 from collections import defaultdict
@@ -15,6 +16,7 @@ from gql import gql
 from gql.transport.requests import RequestsHTTPTransport
 from pycoingecko import CoinGeckoAPI
 from web3 import Web3
+import importlib
 
 from automation.constants import TOTAL_TOKENS_PER_EPOCH
 from automation.constants import TOKENS_TO_FOLLOW_VOTING
@@ -24,16 +26,23 @@ from automation.constants import DYNAMIC_BOOST_CAP
 from automation.constants import MIN_BAL_IN_USD_FOR_BOOST
 from automation.constants import POOLS_SNAPSHOTS_QUERY
 from automation.constants import DESIRED_DEFAULT_VOTE_CAP
-from automation.constants import OUTPUT_FILE_PREFIX
+from automation.constants import FILE_PREFIX
 from automation.emissions_per_year import (
     get_emissions_per_week,
 )
 from automation.helpers import fetch_all_pools_info
 from automation.helpers import get_abi
 from automation.helpers import get_block_by_ts
-from automation.pool_config import boost_data
-from automation.pool_config import cap_override_data
-from automation.pool_config import fixed_emissions_per_pool
+
+from .payload_builders import generate_and_save_aura_transaction
+from .payload_builders import generate_and_save_bal_injector_transaction
+
+# import boost_data, cap_override_data and fixed_emissions_per_pool from the python file specified in POOL_CONFIG
+pool_config = importlib.import_module(f"automation.{FILE_PREFIX}")
+boost_data = pool_config.boost_data
+cap_override_data = pool_config.cap_override_data
+fixed_emissions_per_pool = pool_config.fixed_emissions_per_pool
+percent_to_aura_per_pool = pool_config.percent_to_aura
 from bal_addresses import AddrBook
 from bal_tools import Subgraph
 from bal_addresses import to_checksum_address
@@ -57,6 +66,10 @@ default_vote_cap = max(DESIRED_DEFAULT_VOTE_CAP, 100 / len(whitelist))
 if not default_vote_cap == DESIRED_DEFAULT_VOTE_CAP:
     print(
         f"WARNING: Default vote cap was set to {DESIRED_DEFAULT_VOTE_CAP} but was overridden to {default_vote_cap} to ensure all tokens are distributed"
+    )
+else:
+    print(
+        f"Default vote cap set to {DESIRED_DEFAULT_VOTE_CAP} which should be sufficient to distribute all tokens"
     )
 
 
@@ -177,7 +190,7 @@ def recur_distribute_unspend_tokens(
             )
             uncap_gauge["distribution"] = distribution
             uncap_gauge["pctDistribution"] = (
-                uncap_gauge["distribution"] / TOKENS_TO_FOLLOW_VOTING * 100
+                uncap_gauge["distribution"] / TOTAL_TOKENS_PER_EPOCH * 100
             )
     # Call recursively if there is still unspent tokens
     if (
@@ -186,45 +199,11 @@ def recur_distribute_unspend_tokens(
         > 0
     ):
         recur_distribute_unspend_tokens(max_tokens_per_pool, tokens_gauge_distributions)
-
-
-def generate_and_save_transaction(
-    tokens_gauge_distributions: Dict, start_date: datetime, end_date: datetime
-) -> Dict:
-    """
-    Take tx template and inject data into it
-    """
-    # Dump into output.json using:
-    with open(f"{get_root_dir()}/data/output_tx_template.json") as f:
-        output_data = json.load(f)
-    # Find transaction with func name `setRecipientList` and dump gauge
-    gauge_distributions = tokens_gauge_distributions.values()
-    for tx in output_data["transactions"]:
-        if tx["contractMethod"]["name"] == "setRecipientList":
-            # Inject list of gauges addresses:
-            tx["contractInputsValues"][
-                "gaugeAddresses"
-            ] = f"[{','.join([gauge['recipientGaugeAddr'] for gauge in gauge_distributions])}]"
-            # Inject vote weights:
-            # Dividing by 2 since we are distributing for 2 weeks and 1 week is a period
-            tx["contractInputsValues"][
-                "amountsPerPeriod"
-            ] = f"[{','.join([str(int(Decimal(gauge['distribution']) * Decimal(1e18) / 2)) for gauge in gauge_distributions])}]"
-            tx["contractInputsValues"][
-                "maxPeriods"
-            ] = f"[{','.join(['2' for gauge in gauge_distributions])}]"
-        if tx["contractMethod"]["name"] == "transfer":
-            tx["contractInputsValues"]["amount"] = str(
-                int(Decimal(TOKENS_TO_FOLLOW_VOTING) * Decimal(1e18))
-            )
-
-    # Dump back to tokens_distribution_for_msig.json
-    with open(
-        f"{get_root_dir()}/output/{OUTPUT_FILE_PREFIX}_{start_date.date()}_{end_date.date()}.json",
-        "w",
-    ) as _f:
-        json.dump(output_data, _f, indent=4)
-    return output_data
+    else:
+        # to finish recalculate aura and bal split
+        for gauge in tokens_gauge_distributions.values():
+            gauge["distroToAura"] = gauge["distribution"] * gauge["pctToAura"]
+            gauge["distroToBalancer"] = gauge["distribution"] * (1 - gauge["pctToAura"])
 
 
 def run_stip_pipeline(end_date: int) -> None:
@@ -258,11 +237,11 @@ def run_stip_pipeline(end_date: int) -> None:
             and pool["gauge"]["isKilled"] is False
             and pool["id"].lower() in whitelist
         ):
-            _gauge_addr = Web3.to_checksum_address(pool["gauge"]["address"])
+            _gauge_addr = to_checksum_address(pool["gauge"]["address"])
             gauges[_gauge_addr] = {
-                "gaugeAddress": pool["gauge"]["address"],
-                "poolAddress": pool["address"],
-                "pool": pool["address"],
+                "gaugeAddress": to_checksum_address(pool["gauge"]["address"]),
+                "poolAddress": to_checksum_address(pool["address"]),
+                "pool": to_checksum_address(pool["address"]),
                 "symbol": pool["symbol"],
                 "id": pool["id"],
             }
@@ -318,12 +297,17 @@ def run_stip_pipeline(end_date: int) -> None:
                 pool_protocol_fees.get(gauge_addr, 0) / dollar_value_of_bal_emitted,
                 DYNAMIC_BOOST_CAP,
             )
+            print(
+                f"Gauge {gauge_addr} has a fees of {pool_protocol_fees.get(gauge_addr, 0)} and earned {dollar_value_of_bal_emitted} in USD BAL rendering a raw dynamic boost of {dynamic_boost}"
+            )
         else:
-            dynamic_boost = 0
+            dynamic_boost = 1.0
+        if dynamic_boost < 1:
+            dynamic_boost = 1.0
         dynamic_boosts[gauge_addr] = dynamic_boost
 
         # Now calculate the final boost value, which uses formula - (dynamic boost + fixed boost) - 1
-        boost = (dynamic_boost + boost_data.get(gauge_addr, 1)) - 1
+        boost = (dynamic_boost + boost_data.get(gauge_data["id"], 1)) - 1
         combined_boost[gauge_addr] = boost
         weight *= boost
         vote_weights[gauge_addr] = weight
@@ -339,14 +323,14 @@ def run_stip_pipeline(end_date: int) -> None:
     # Vote caps in percents are calculated as a percentage of the total amount of arb to distribute
     # Custom gauge caps taken from override data in constants.py, calculated as a percentage of the total amount of
     # arb to distribute
-    vote_cap_in_percents = {}
-    vote_caps = {}
+    percent_vote_caps_per_gauge = {}
+    max_tokens_per_gauge = {}
     for gauge_addr in gauges.keys():
-        vote_cap_in_percents[gauge_addr] = cap_override_data.get(
-            gauges[gauge_addr]["id"], default_vote_cap
+        percent_vote_caps_per_gauge[gauge_addr] = cap_override_data.get(
+            gauges[gauge_addr]["id"].lower(), default_vote_cap
         )
-        vote_caps[gauge_addr] = (
-            vote_cap_in_percents[gauge_addr] / 100 * TOTAL_TOKENS_PER_EPOCH
+        max_tokens_per_gauge[gauge_addr] = (
+            percent_vote_caps_per_gauge[gauge_addr] / 100 * TOTAL_TOKENS_PER_EPOCH
         )
     # Calculate total weight
     total_weight = sum([gauge["voteWeight"] for gauge in gauges.values()])
@@ -362,8 +346,8 @@ def run_stip_pipeline(end_date: int) -> None:
         # Cap distribution
         to_distribute = (
             to_distribute
-            if to_distribute < vote_caps[gauge_addr]
-            else vote_caps[gauge_addr]
+            if to_distribute < max_tokens_per_gauge[gauge_addr]
+            else max_tokens_per_gauge[gauge_addr]
         )
         # Get L2 gauge addr
 
@@ -371,23 +355,27 @@ def run_stip_pipeline(end_date: int) -> None:
         mainnet_root_gauge_contract = web3_mainnet.eth.contract(
             address=Web3.to_checksum_address(gauge_addr), abi=get_abi("ArbRootGauge")
         )
+        to_distribute = min(to_distribute, max_tokens_per_gauge[gauge_addr])
+        pct_to_aura = percent_to_aura_per_pool.get(gauges[gauge_addr]["id"], 0)
+        pct_to_bal = 1 - pct_to_aura
         gauge_distributions[gauge_addr] = {
             "recipientGaugeAddr": mainnet_root_gauge_contract.functions.getRecipient().call(),
             "poolAddress": gauge_data["poolAddress"],
             "symbol": gauge_data["symbol"],
-            "voteWeight": gauge_data["voteWeight"],
-            "voteWeightNoBoost": gauge_data["weightNoBoost"],
-            "distribution": to_distribute
-            if to_distribute < vote_caps[gauge_addr]
-            else vote_caps[gauge_addr],
+            "distribution": to_distribute,
             "pctDistribution": to_distribute / TOTAL_TOKENS_PER_EPOCH * 100,
-            "boost": combined_boost.get(gauge_addr, 1),
-            "staticBoost": boost_data.get(gauge_addr, 1),
+            "pctToAura": pct_to_aura,
+            "distroToAura": to_distribute * pct_to_aura,
+            "distroToBalancer": to_distribute * pct_to_bal,
+            "voteWeightNoBoost": gauge_data["weightNoBoost"],
+            "staticBoost": boost_data.get(gauges[gauge_addr]["id"], 1),
             "dynamicBoost": dynamic_boosts.get(gauge_addr, 1),
-            "cap": f"{cap_override_data.get(gauge_addr, default_vote_cap)}",
+            "boost": combined_boost.get(gauge_addr, 1),
+            "voteWeight": gauge_data["voteWeight"],
+            "cap": f"{percent_vote_caps_per_gauge[gauge_addr]}%",
             "fixedIncentive": fixed_emissions_per_pool[gauge_data["id"]],
         }
-    recur_distribute_unspend_tokens(vote_caps, gauge_distributions)
+    recur_distribute_unspend_tokens(max_tokens_per_gauge, gauge_distributions)
     print(
         f"Unspent arb: {TOTAL_TOKENS_PER_EPOCH - sum([gauge['distribution'] for gauge in gauge_distributions.values()])}"
     )
@@ -412,8 +400,31 @@ def run_stip_pipeline(end_date: int) -> None:
     )
     # Export to csv
     gauge_distributions_df.to_csv(
-        f"{get_root_dir()}/output/{OUTPUT_FILE_PREFIX}_{start_date.date()}_{end_date.date()}.csv",
+        f"{get_root_dir()}/output/{FILE_PREFIX}_{start_date.date()}_{end_date.date()}.csv",
         index=False,
     )
 
-    generate_and_save_transaction(gauge_distributions, start_date, end_date)
+    bal_tx = generate_and_save_bal_injector_transaction(
+        gauge_distributions, start_date, end_date
+    )
+    # Aura direct was not used in this program
+    # Note that this will also be for the full amount logic to split is pending, but can run for half to split the whole
+    #  payload.
+    # aura_tx = generate_and_save_aura_transaction(
+    #    gauge_distributions,
+    #    start_date,
+    #    end_date,
+    #    CHAIN_NAME,
+    #    pct_of_distribution=0.5,  # 50% due to 1 week
+    #    num_periods=1,  # 1 week special
+    # )
+    # if isinstance(aura_tx, dict) and aura_tx.get(["transactions"], 0) > 1:
+    #    # Create a merged transaction file for single load
+    #    merged_tx = copy.deepcopy(bal_tx)
+    #    merged_tx["transactions"].extend(aura_tx["transactions"])
+    #    with open(
+    #        f"{get_root_dir()}/output/{FILE_PREFIX}_{start_date.date()}_{end_date.date()}_merged.json",
+    #        "w",
+    #    ) as f:
+    #        json.dump(merged_tx, f, indent=2)
+    #
