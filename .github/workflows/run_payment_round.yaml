@@ -9,7 +9,6 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  TIMESTAMP: ${{ inputs.epoch_end_date }}
 
 jobs:
   genPayload:
