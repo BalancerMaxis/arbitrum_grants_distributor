@@ -355,11 +355,11 @@ def get_block_by_ts(timestamp: int, chain: str) -> int:
 
 
 if __name__ == "__main__":
-    web3 = Web3(Web3.HTTPProvider("https://rpc.gnosischain.com"))
+    web3 = Web3(Web3.HTTPProvider("https://arbitrum.llamarpc.com"))
     bpt_price = get_twap_bpt_price(
-        "0xbad20c15a773bf03ab973302f61fabcea5101f0a000000000000000000000034",
-        "gnosis",
+        "0x5b89dc91e5a4dc6d4ab0d970af6a7f981971a443000000000000000000000572",
+        "arbitrum",
         web3,
-        block_number=29976541,
+        block_number=231064225,
     )
     print(bpt_price)
