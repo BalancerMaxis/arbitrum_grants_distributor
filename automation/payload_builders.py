@@ -127,6 +127,6 @@ def generate_and_save_bal_injector_transaction(
     ) as _f:
         json.dump(output_data, _f, indent=2)
     print(
-        f"{transfer_tx["contractInputsValues"]["amount"] } $ARB transferred for balancer injector"
+        f'{transfer_tx["contractInputsValues"]["amount"] } $ARB transferred for balancer injector'
     )
     return output_data
