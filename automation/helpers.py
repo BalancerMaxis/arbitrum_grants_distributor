@@ -65,7 +65,7 @@ CHAIN_TO_CHAIN_ID_MAP = {
 
 BAL_GQL_QUERY = """
 query {{
-  tokenGetPriceChartData(address:"{token_addr}", range: NINETY_DAY)   
+  tokenGetPriceChartData(address:"{token_addr}", range: NINETY_DAY, , chain: ARBITRUM)   
    {{
     id
     price
