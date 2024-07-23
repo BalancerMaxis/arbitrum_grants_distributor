@@ -1,10 +1,9 @@
-import copy
 import json
+from decimal import Decimal, ROUND_DOWN
 import os
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
-from decimal import Decimal
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -19,7 +18,6 @@ from web3 import Web3
 import importlib
 
 from automation.constants import TOTAL_TOKENS_PER_EPOCH
-from automation.constants import TOKENS_TO_FOLLOW_VOTING
 from automation.constants import BALANCER_GAUGE_CONTROLLER_ABI
 from automation.constants import CHAIN_NAME
 from automation.constants import DYNAMIC_BOOST_CAP
@@ -36,16 +34,18 @@ from automation.helpers import get_block_by_ts
 
 from .payload_builders import generate_and_save_aura_transaction
 from .payload_builders import generate_and_save_bal_injector_transaction
+from bal_addresses import AddrBook
+from bal_tools import Subgraph
+from bal_addresses import to_checksum_address
 
 # import boost_data, cap_override_data and fixed_emissions_per_pool from the python file specified in POOL_CONFIG
 pool_config = importlib.import_module(f"automation.{FILE_PREFIX}")
+total_fixed_emissions = pool_config.total_fixed_emissions
 boost_data = pool_config.boost_data
 cap_override_data = pool_config.cap_override_data
 fixed_emissions_per_pool = pool_config.fixed_emissions_per_pool
 percent_to_aura_per_pool = pool_config.percent_to_aura
-from bal_addresses import AddrBook
-from bal_tools import Subgraph
-from bal_addresses import to_checksum_address
+tokens_to_follow_voting = TOTAL_TOKENS_PER_EPOCH - total_fixed_emissions
 
 # Configure Library objects for chain
 addressbook = AddrBook(CHAIN_NAME)
@@ -149,8 +149,9 @@ def recur_distribute_unspend_tokens(
     Recursively distribute unspent tokens to uncapped gauges proportionally to their voting weight until
     there is no unspent tokens left
     """
-    unspent_tokens = TOTAL_TOKENS_PER_EPOCH - sum(
-        [gauge["distribution"] for gauge in tokens_gauge_distributions.values()]
+    unspent_tokens = Decimal(
+        TOTAL_TOKENS_PER_EPOCH
+        - sum([gauge["distribution"] for gauge in tokens_gauge_distributions.values()])
     )
     print(f"recursively distributing {unspent_tokens} unspent tokens")
     if unspent_tokens > 0:
@@ -180,7 +181,10 @@ def recur_distribute_unspend_tokens(
         }.items():
             # For each loop calculate unspent tokens
             unspent_tokens = TOTAL_TOKENS_PER_EPOCH - sum(
-                [gauge["distribution"] for gauge in tokens_gauge_distributions.values()]
+                [
+                    Decimal(gauge["distribution"]).to_integral_value(ROUND_DOWN)
+                    for gauge in tokens_gauge_distributions.values()
+                ]
             )
             # Don't distribute more than vote cap
             distribution = min(
@@ -237,6 +241,7 @@ def run_stip_pipeline(end_date: int) -> None:
             and pool["gauge"]["isKilled"] is False
             and pool["id"].lower() in whitelist
         ):
+            print(f"Selecting pool {pool['id']}({pool['symbol']}) for STIP emissions")
             _gauge_addr = to_checksum_address(pool["gauge"]["address"])
             gauges[_gauge_addr] = {
                 "gaugeAddress": to_checksum_address(pool["gauge"]["address"]),
@@ -284,6 +289,7 @@ def run_stip_pipeline(end_date: int) -> None:
             * 100
         )
         gauges[gauge_addr]["weightNoBoost"] = weight
+        print(f"Vote Weight for gauge {gauge_addr}({gauge_data['symbol']}) is {weight}")
         # Calculate dynamic boost. Formula is `[Fees earned*multipler/value of bal emitted per pool]`
         # Value of bal earned must always be >1 to allow for the desired effect from division.
         dollar_value_of_bal_emitted = (
@@ -298,12 +304,16 @@ def run_stip_pipeline(end_date: int) -> None:
                 DYNAMIC_BOOST_CAP,
             )
             print(
-                f"Gauge {gauge_addr} has a fees of {pool_protocol_fees.get(gauge_addr, 0)} and earned {dollar_value_of_bal_emitted} in USD BAL rendering a raw dynamic boost of {dynamic_boost}"
+                f"Gauge {gauge_addr}({gauge_data['symbol']}) has a fees of {pool_protocol_fees.get(gauge_addr, 0)} and earned {dollar_value_of_bal_emitted} in USD BAL rendering a raw dynamic boost of {dynamic_boost}"
             )
         else:
             dynamic_boost = 1.0
+            print(
+                f"Gauge {gauge_addr}({gauge_data['symbol']} has less than {MIN_BAL_IN_USD_FOR_BOOST} USD in earned BAL emissions this round.  Skipping boost calculations. (Boost: 1.0)"
+            )
         if dynamic_boost < 1:
             dynamic_boost = 1.0
+            print("Dynamic boost for gauge is less than 1.0. Setting to 1.0")
         dynamic_boosts[gauge_addr] = dynamic_boost
 
         # Now calculate the final boost value, which uses formula - (dynamic boost + fixed boost) - 1
@@ -312,6 +322,7 @@ def run_stip_pipeline(end_date: int) -> None:
         weight *= boost
         vote_weights[gauge_addr] = weight
         gauges[gauge_addr]["voteWeight"] = weight
+        print("---\n")
     print(
         f"Total boosted %veBAL vote weight across eligible ARB gauges: {sum(vote_weights.values())}"
     )
@@ -339,7 +350,7 @@ def run_stip_pipeline(end_date: int) -> None:
         gauge_addr = Web3.to_checksum_address(gauge_addr)
         # Calculate distribution based on vote weight and total weight
         to_distribute = (
-            TOKENS_TO_FOLLOW_VOTING * gauge_data["voteWeight"] / total_weight
+            tokens_to_follow_voting * gauge_data["voteWeight"] / total_weight
         )
         # Add in fixed incentives
         to_distribute += fixed_emissions_per_pool.get(gauge_data["id"], 0)
@@ -377,7 +388,7 @@ def run_stip_pipeline(end_date: int) -> None:
         }
     recur_distribute_unspend_tokens(max_tokens_per_gauge, gauge_distributions)
     print(
-        f"Unspent arb: {TOTAL_TOKENS_PER_EPOCH - sum([gauge['distribution'] for gauge in gauge_distributions.values()])}"
+        f"\n---\nUnspent arb: {TOTAL_TOKENS_PER_EPOCH - sum([gauge['distribution'] for gauge in gauge_distributions.values()])}"
     )
     print(
         f"Tokens distributed: {sum([gauge['distribution'] for gauge in gauge_distributions.values()])}"
