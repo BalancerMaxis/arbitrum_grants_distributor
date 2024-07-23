@@ -160,7 +160,7 @@ total_fixed_emissions = sum(
 )
 assert (
     total_fixed_emissions <= MAX_FIXED_INCENTIVE_TOKENS_PER_EPOCH
-), f"Sum of fixed emissions configured:{total_fixed_emissions} does not equal FIXED_INCENTIVE_TOKENS_PER_EPOCH:{FIXED_INCENTIVE_TOKENS_PER_EPOCH} configured in constants.py"
+), f"Sum of fixed emissions configured:{total_fixed_emissions} does not equal FIXED_INCENTIVE_TOKENS_PER_EPOCH:{MAX_FIXED_INCENTIVE_TOKENS_PER_EPOCH} configured in constants.py"
 
 # Load static boost data
 boost_data = {}
