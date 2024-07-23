@@ -51,9 +51,6 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     },
     {
         "pool_id": "0x315dd595e82bdc0c194f3a38a08fde480d7e5d2100020000000000000000056a",
-    }
-    {
-        "pool_id": "0x315dd595e82bdc0c194f3a38a08fde480d7e5d2100020000000000000000056a",
         "meta": {"symbol": "GYD-wUSDM-ECLP"},
     },
     {
