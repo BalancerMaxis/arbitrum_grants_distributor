@@ -65,6 +65,7 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     {
         "pool_id": "0xcdcef9765d369954a4a936064535710f7235110a000200000000000000000558",
         "meta": {"symbol": "weETH-wstETH ECLP"},
+        "fixedBoost": 1.5,
     },
     {
         "pool_id": "0x7967fa58b9501600d96bd843173b9334983ee6e600020000000000000000056e",
