@@ -1,6 +1,6 @@
 from web3 import Web3
 from automation.constants import (
-    FIXED_INCENTIVE_TOKENS_PER_EPOCH,
+    MAX_FIXED_INCENTIVE_TOKENS_PER_EPOCH,
     DESIRED_DEFAULT_VOTE_CAP,
     DEFAULT_PCT_TO_AURA,
 )
@@ -159,7 +159,7 @@ total_fixed_emissions = sum(
     [x.get("fixedEmissions", 0) for x in ACTIVE_POOLS_AND_OVERRIDES]
 )
 assert (
-    total_fixed_emissions == FIXED_INCENTIVE_TOKENS_PER_EPOCH
+    total_fixed_emissions <= MAX_FIXED_INCENTIVE_TOKENS_PER_EPOCH
 ), f"Sum of fixed emissions configured:{total_fixed_emissions} does not equal FIXED_INCENTIVE_TOKENS_PER_EPOCH:{FIXED_INCENTIVE_TOKENS_PER_EPOCH} configured in constants.py"
 
 # Load static boost data
