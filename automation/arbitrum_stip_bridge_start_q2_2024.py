@@ -52,6 +52,7 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     {
         "pool_id": "0x315dd595e82bdc0c194f3a38a08fde480d7e5d2100020000000000000000056a",
         "meta": {"symbol": "GYD-wUSDM-ECLP"},
+        "fixeddEmissions": 4_000,
     },
     {
         "pool_id": "0xe8a6026365254f779b6927f00f8724ea1b8ae5e0000000000000000000000580",
