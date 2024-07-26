@@ -1,6 +1,6 @@
 from web3 import Web3
 from automation.constants import (
-    FIXED_INCENTIVE_TOKENS_PER_EPOCH,
+    MAX_FIXED_INCENTIVE_TOKENS_PER_EPOCH,
     DESIRED_DEFAULT_VOTE_CAP,
     DEFAULT_PCT_TO_AURA,
 )
@@ -36,15 +36,31 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     ## },
     ## {
     {
+        "pool_id": "0xdfa752ca3ff49d4b6dbe08e2d5a111f51773d3950000000000000000000004e8",
+        "meta": {"symbol": "sFRAX/FRAX"},
+    },
+    {
+        "pool_id": "0x59743f1812bb85db83e9e4ee061d124aaa64290000000000000000000000052b",
+        "meta": {"symbol": "sUSDe-sFRAX"},
+        "fixedBoost": 1.5,
+        "fixedEmissions": 8_000,
+    },
+    {
+        "pool_id": "0x2f0cdf8596be980ef24924ca7bf54e630ca526b2000000000000000000000529",
+        "meta": {"symbol": "sUSDe-USDC"},
+    },
+    {
+        "pool_id": "0x315dd595e82bdc0c194f3a38a08fde480d7e5d2100020000000000000000056a",
+        "meta": {"symbol": "GYD-wUSDM-ECLP"},
+    },
+    {
         "pool_id": "0xe8a6026365254f779b6927f00f8724ea1b8ae5e0000000000000000000000580",
         "meta": {"symbol": "gUSDC-USDC"},
         "fixedBoost": 1.75,
-        "fixedEmissions": 2000,
     },
     {
         "pool_id": "0x90e6cb5249f5e1572afbf8a96d8a1ca6acffd73900000000000000000000055c",
         "meta": {"symbol": "rsETH-wETH"},
-        "fixedEmissions": 4000,
     },
     {
         "pool_id": "0xcdcef9765d369954a4a936064535710f7235110a000200000000000000000558",
@@ -55,7 +71,6 @@ ACTIVE_POOLS_AND_OVERRIDES = [
         "pool_id": "0x7967fa58b9501600d96bd843173b9334983ee6e600020000000000000000056e",
         "meta": {"symbol": "wstETH-wETH-ECLP"},
         "fixedBoost": 2,
-        "fixedEmissions": 6000,
     },
     {
         "pool_id": "0x5b89dc91e5a4dc6d4ab0d970af6a7f981971a443000000000000000000000572",
@@ -71,7 +86,6 @@ ACTIVE_POOLS_AND_OVERRIDES = [
         "pool_id": "0x7b54c44fbe6db6d97fd22b8756f89c0af16202cc00000000000000000000053c",
         "meta": {"symbol": "ETHx-wstETH-ETH"},
         "fixedBoost": 1.5,
-        "fixedEmissions": 3300,
     },
     {
         "pool_id": "0x7272163a931dac5bbe1cb5fefaf959bb65f7346f000200000000000000000549",
@@ -145,8 +159,8 @@ total_fixed_emissions = sum(
     [x.get("fixedEmissions", 0) for x in ACTIVE_POOLS_AND_OVERRIDES]
 )
 assert (
-    total_fixed_emissions == FIXED_INCENTIVE_TOKENS_PER_EPOCH
-), f"Sum of fixed emissions configured:{total_fixed_emissions} does not equal FIXED_INCENTIVE_TOKENS_PER_EPOCH:{FIXED_INCENTIVE_TOKENS_PER_EPOCH} configured in constants.py"
+    total_fixed_emissions <= MAX_FIXED_INCENTIVE_TOKENS_PER_EPOCH
+), f"Sum of fixed emissions configured:{total_fixed_emissions} does not equal FIXED_INCENTIVE_TOKENS_PER_EPOCH:{MAX_FIXED_INCENTIVE_TOKENS_PER_EPOCH} configured in constants.py"
 
 # Load static boost data
 boost_data = {}
