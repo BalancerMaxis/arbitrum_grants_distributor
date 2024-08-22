@@ -180,11 +180,15 @@ def recur_distribute_unspend_tokens(
             if gauge["distribution"] < max_tokens_per_pool[addr]
         }.items():
             # For each loop calculate unspent tokens
-            unspent_tokens = TOTAL_TOKENS_PER_EPOCH - sum(
-                [
-                    Decimal(gauge["distribution"]).to_integral_value(ROUND_DOWN)
-                    for gauge in tokens_gauge_distributions.values()
-                ]
+            ## TODO reconsider typing as it is unclear why this change was needed as there have been no changes since the last successful run
+            unspent_tokens = float(
+                Decimal(TOTAL_TOKENS_PER_EPOCH)
+                - sum(
+                    [
+                        Decimal(gauge["distribution"]).to_integral_value(ROUND_DOWN)
+                        for gauge in tokens_gauge_distributions.values()
+                    ]
+                )
             )
             # Don't distribute more than vote cap
             distribution = min(

@@ -183,7 +183,6 @@ def fetch_all_pools_info(chain: str) -> List[Dict]:
     transport = RequestsHTTPTransport(
         url=BAL_GQL_URL,
         retries=2,
-        headers={"chainId": CHAIN_TO_CHAIN_ID_MAP[chain]} if chain != "mainnet" else {},
     )
     client = Client(transport=transport, fetch_schema_from_transport=True)
     query = gql(BAL_GET_VOTING_LIST_QUERY)
