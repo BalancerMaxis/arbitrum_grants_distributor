@@ -70,7 +70,6 @@ ACTIVE_POOLS_AND_OVERRIDES = [
         "pool_id": "0x59743f1812bb85db83e9e4ee061d124aaa64290000000000000000000000052b",
         "meta": {"symbol": "sUSDe-sFRAX"},
         "fixedBoost": 1.5,
-        "fixedEmissions": 4_000,
     },
     {
         "pool_id": "0x2f0cdf8596be980ef24924ca7bf54e630ca526b2000000000000000000000529",
