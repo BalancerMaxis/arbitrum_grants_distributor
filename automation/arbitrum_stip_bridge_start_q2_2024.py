@@ -36,6 +36,33 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     ## },
     ## {
     {
+        "pool_id": "0xdeeaf8b0a8cf26217261b813e085418c7dd8f1ee00020000000000000000058f",
+        "meta": {"symbol": "sUSDe-GYD-ECLP"},
+    },
+    {
+        "pool_id": "0xa899c63ba9ff275d6bfc83e43ee8e58ff6987584000200000000000000000594",
+        "meta": {"symbol": "rETH-wstETH-ECLP"},
+        "fixed_boost": 1.5,
+    },
+    {
+        "pool_id": "0x71c64ac8ec1da03f8a05c3cfeb6493e6dad54a6f000200000000000000000592",
+        "meta": {"symbol": "wUSDM-USDC-ECLP"},
+    },
+    {
+        "pool_id": "0x36c2f879f446c3b6533f9703745c0504f3a84885000200000000000000000591",
+        "meta": {"symbol": "sFRAX-aFRAX-ECLP"},
+        "fixed_boost": 2,
+    },
+    {
+        "pool_id": "0xf13758d6edd1937dcb3f4fe75889b579d400299a000000000000000000000595",
+        "meta": {"symbol": "weETH-wETH"},
+    },
+    {
+        "pool_id": "0x8d58755ca11d2c7273fed72aeb637e38a66c228c00000000000000000000058c",
+        "meta": {"symbol": "sUSX/USX"},
+        "fixed_boost": 2,
+    },
+    {
         "pool_id": "0xdfa752ca3ff49d4b6dbe08e2d5a111f51773d3950000000000000000000004e8",
         "meta": {"symbol": "sFRAX/FRAX"},
     },
@@ -56,6 +83,11 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     {
         "pool_id": "0xe8a6026365254f779b6927f00f8724ea1b8ae5e0000000000000000000000580",
         "meta": {"symbol": "gUSDC-USDC"},
+        "fixedBoost": 1.75,
+    },
+    {
+        "pool_id": "0x69d9bc07a19caad9ae4ca40af18d5a688839a29900020000000000000000058e",
+        "meta": {"symbol": "gUSDC-USDC-ECLP"},
         "fixedBoost": 1.75,
     },
     {
