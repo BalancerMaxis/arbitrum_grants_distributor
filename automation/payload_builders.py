@@ -49,8 +49,8 @@ def generate_and_save_aura_transaction(
         tx["contractInputsValues"]["_pid"] = aura_pid
         amount = (
             Decimal(gauge["distroToAura"]) * Decimal(pct_of_distribution)
-        ).to_integral_value(rounding=ROUND_DOWN)
-        wei_amount = amount * Decimal(1e18)
+        ).quantize(precision, rounding=ROUND_DOWN)
+        wei_amount = (amount * Decimal(1e18)).to_integral_value()
         tx["contractInputsValues"]["_amount"] = str(wei_amount)
         tx["contractInputsValues"]["_periods"] = str(num_periods)
         if wei_amount > 0:
@@ -99,7 +99,9 @@ def generate_and_save_bal_injector_transaction(
     # Inject list of gauges addresses:
     for gauge in gauge_distributions:
         gauges_list.append(gauge["recipientGaugeAddr"])
-        epoch_amount = Decimal(gauge["distroToBalancer"]) * Decimal(pct_of_distribution)
+        epoch_amount = (
+            Decimal(gauge["distroToBalancer"]) * Decimal(pct_of_distribution)
+        ).quantize(precision, rounding=ROUND_DOWN)
         period_amount = epoch_amount / Decimal(num_periods)
         wei_amount = (period_amount * Decimal(1e18)).to_integral_value(
             rounding=ROUND_DOWN

@@ -38,6 +38,11 @@ from bal_addresses import AddrBook
 from bal_tools import Subgraph
 from bal_addresses import to_checksum_address
 
+precision = Decimal(
+    "0." + "0" * 9 + "1"
+)  # 10 0s after the dot is insignificant for our purposes and takes care of rounding errors.
+
+
 # import boost_data, cap_override_data and fixed_emissions_per_pool from the python file specified in POOL_CONFIG
 pool_config = importlib.import_module(f"automation.{FILE_PREFIX}")
 total_fixed_emissions = pool_config.total_fixed_emissions
@@ -159,7 +164,7 @@ def recur_distribute_unspend_tokens(
         total_uncapped_weight = Decimal(
             sum(
                 [
-                    g["voteWeight"]
+                    g["voteWeight"].quantize(precision, rounding=ROUND_DOWN)
                     for g in [
                         gauge
                         for addr, gauge in tokens_gauge_distributions.items()
@@ -194,7 +199,9 @@ def recur_distribute_unspend_tokens(
             distribution = min(
                 Decimal(uncap_gauge["distribution"])
                 + unspent_tokens
-                * Decimal(uncap_gauge["voteWeight"])
+                * Decimal(uncap_gauge["voteWeight"]).quantize(
+                    precision, rounding=ROUND_DOWN
+                )
                 / total_uncapped_weight,
                 max_tokens_per_pool[a],
             )
