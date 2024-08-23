@@ -62,7 +62,7 @@ ACTIVE_POOLS_AND_OVERRIDES = [
         "meta": {"symbol": "sUSX/USX"},
         "fixed_boost": 2,
     },
-        {
+    {
         "pool_id": "0xff38cc0ce0de4476c5a3e78675b48420a851035b000200000000000000000593",
         "meta": {"symbol": "GYD/aGHO"},
         "fixed_boost": 2,
