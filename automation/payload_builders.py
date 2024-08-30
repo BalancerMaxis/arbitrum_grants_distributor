@@ -103,10 +103,15 @@ def generate_and_save_bal_injector_transaction(
             Decimal(gauge["distroToBalancer"]) * Decimal(pct_of_distribution)
         ).quantize(precision, rounding=ROUND_DOWN)
         period_amount = epoch_amount / Decimal(num_periods)
-        wei_amount = (period_amount * Decimal(1e18)).to_integral_value()
-        total_amount += (epoch_amount * Decimal(1e18)).to_integral_value()
+        wei_amount = (period_amount * Decimal(1e18)).to_integral_value(
+            rounding=ROUND_DOWN
+        )
+        total_amount += wei_amount * num_periods
         amounts_list.append(str(wei_amount))
         max_periods_list.append(str(num_periods))
+    print(
+        f"Total amount of tokens allocated in payload json:{total_amount}({total_amount/Decimal(1e18)}) $ARB"
+    )
     tx = copy.deepcopy(tx_template)
     tx["contractInputsValues"]["gaugeAddresses"] = f"[{','.join(gauges_list)}]"
     tx["contractInputsValues"]["amountsPerPeriod"] = f"[{','.join(amounts_list)}]"
@@ -126,7 +131,4 @@ def generate_and_save_bal_injector_transaction(
         "w",
     ) as _f:
         json.dump(output_data, _f, indent=2)
-    print(
-        f'{transfer_tx["contractInputsValues"]["amount"] } $ARB transferred for balancer injector'
-    )
     return output_data

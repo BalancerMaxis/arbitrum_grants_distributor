@@ -38,6 +38,11 @@ from bal_addresses import AddrBook
 from bal_tools import Subgraph
 from bal_addresses import to_checksum_address
 
+precision = Decimal(
+    "0." + "0" * 9 + "1"
+)  # 10 0s after the dot is insignificant for our purposes and takes care of rounding errors.
+
+
 # import boost_data, cap_override_data and fixed_emissions_per_pool from the python file specified in POOL_CONFIG
 pool_config = importlib.import_module(f"automation.{FILE_PREFIX}")
 total_fixed_emissions = pool_config.total_fixed_emissions
@@ -156,15 +161,17 @@ def recur_distribute_unspend_tokens(
     print(f"recursively distributing {unspent_tokens} unspent tokens")
     if unspent_tokens > 0:
         # Find out total voting weight of uncapped gauges and mark it as 100%:
-        total_uncapped_weight = sum(
-            [
-                g["voteWeight"]
-                for g in [
-                    gauge
-                    for addr, gauge in tokens_gauge_distributions.items()
-                    if gauge["distribution"] < max_tokens_per_pool[addr]
+        total_uncapped_weight = Decimal(
+            sum(
+                [
+                    g["voteWeight"].quantize(precision, rounding=ROUND_DOWN)
+                    for g in [
+                        gauge
+                        for addr, gauge in tokens_gauge_distributions.items()
+                        if gauge["distribution"] < max_tokens_per_pool[addr]
+                    ]
                 ]
-            ]
+            )
         )
         # if total uncapped weight is 0, then we can not continue
         print(f"Distributing {total_uncapped_weight} of vote weight is still uncapped.")
@@ -180,21 +187,27 @@ def recur_distribute_unspend_tokens(
             if gauge["distribution"] < max_tokens_per_pool[addr]
         }.items():
             # For each loop calculate unspent tokens
-            unspent_tokens = TOTAL_TOKENS_PER_EPOCH - sum(
+            ## TODO reconsider typing as it is unclear why this change was needed as there have been no changes since the last successful run
+            unspent_tokens = Decimal(TOTAL_TOKENS_PER_EPOCH) - sum(
                 [
                     Decimal(gauge["distribution"]).to_integral_value(ROUND_DOWN)
                     for gauge in tokens_gauge_distributions.values()
                 ]
             )
+
             # Don't distribute more than vote cap
             distribution = min(
-                uncap_gauge["distribution"]
-                + unspent_tokens * uncap_gauge["voteWeight"] / total_uncapped_weight,
+                Decimal(uncap_gauge["distribution"])
+                + unspent_tokens
+                * Decimal(uncap_gauge["voteWeight"]).quantize(
+                    precision, rounding=ROUND_DOWN
+                )
+                / total_uncapped_weight,
                 max_tokens_per_pool[a],
             )
             uncap_gauge["distribution"] = distribution
             uncap_gauge["pctDistribution"] = (
-                uncap_gauge["distribution"] / TOTAL_TOKENS_PER_EPOCH * 100
+                uncap_gauge["distribution"] / Decimal(TOTAL_TOKENS_PER_EPOCH) * 100
             )
     # Call recursively if there is still unspent tokens
     if (
