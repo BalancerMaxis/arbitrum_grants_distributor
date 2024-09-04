@@ -36,6 +36,11 @@ ACTIVE_POOLS_AND_OVERRIDES = [
     ## },
     ## {
     {
+        "pool_id": "0x38161e9efb8de52d00a1eb0f773223fd28fdd7c20002000000000000000005a0",
+        "meta": {"symbol": "aGHO-USDe-ECLP"},
+        "fixedBoost": 2,
+    },
+    {
         "pool_id": "0xdeeaf8b0a8cf26217261b813e085418c7dd8f1ee00020000000000000000058f",
         "meta": {"symbol": "sUSDe-GYD-ECLP"},
     },
@@ -66,6 +71,7 @@ ACTIVE_POOLS_AND_OVERRIDES = [
         "pool_id": "0xff38cc0ce0de4476c5a3e78675b48420a851035b000200000000000000000593",
         "meta": {"symbol": "GYD/aGHO"},
         "fixed_boost": 2,
+        "fixedEmissions": 2_000,
     },
     {
         "pool_id": "0xdfa752ca3ff49d4b6dbe08e2d5a111f51773d3950000000000000000000004e8",
